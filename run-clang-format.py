@@ -8,6 +8,11 @@ import xml.etree.ElementTree as ElementTree
 SUPPORTED_FILE_EXTENSIONS = [".h", ".hpp", ".c", ".cpp", ".m", ".mm"]
 
 def run_clang_format(directory):
+    if not os.path.exists(os.path.join(directory, ".clang-format")):
+        print("Error: No .clang-format file found. Please generate one, such as by using the following command:\nclang-format -style=llvm -dump-config > .clang-format\n")
+        exit(-1)
+    
+    
     modified_files = get_git_modified_files()
     
     for file in modified_files:
@@ -25,7 +30,7 @@ def run_clang_format(directory):
 
 
 def run_clang_format_on_file(absolute_filename):
-    args = ["clang-format", "-output-replacements-xml", "-style=WebKit", absolute_filename]
+    args = ["clang-format", "-output-replacements-xml", "-style=file", absolute_filename]
     process_result = subprocess.run(args, stdout=subprocess.PIPE)
     
     replacements_xml_tree = ElementTree.fromstring(process_result.stdout)
@@ -88,6 +93,8 @@ def build_warning_message(replacement_text, replacement_length, replacement_offs
             return "replace char with \"{}\"".format(replacement_text)
         elif replacement_length == 2 and replacement_text == ' ': # Not necessarily accurate, but most likely
             return "remove a space"
+        elif replacement_text.find("#include") != -1 and replacement_length > len("#include "):
+            return "alphabetize headers"
         else:
             return "replace next {} chars with \"{}\"".format(replacement_length, replacement_text)
 
@@ -101,7 +108,7 @@ def build_warning_message_details(replacement_text, replacement_length, replacem
         replacement_text + \
         file_string[replacement_offset-1+replacement_length:surrounding_text_end+replacement_length]
     
-    return "  ➡️  " + surrounding_text_with_replacement
+    return "  ➡️  …" + surrounding_text_with_replacement + "…"
 
 def get_git_modified_files():
     result = []

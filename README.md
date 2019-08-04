@@ -12,9 +12,20 @@ python3 /path/to/run-clang-format.py
 - You may move this phase to any order within the list, but right before Compile Sources is often best
 - Build your project!
 
+## Disabling formatting for specific code
+See https://clang.llvm.org/docs/ClangFormatStyleOptions.html#disabling-formatting-on-a-piece-of-code
+tl;dr: clang-format will read the below comments to turn off formatting for a specific block of code.
+```
+int formatted_code;
+// clang-format off
+    void    unformatted_code  ;
+// clang-format on
+void formatted_code_again;
+```
 
 ## Helpful Links
 - https://clang.llvm.org/docs/ClangFormat.html
+- https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 - https://zed0.co.uk/clang-format-configurator
 - https://github.com/travisjeffery/ClangFormat-Xcode
 
