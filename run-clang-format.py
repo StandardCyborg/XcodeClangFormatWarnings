@@ -48,7 +48,7 @@ def run_clang_format_on_file(absolute_filename):
         # Make the replacement text easier to read
         replacement_text = replacement_text.replace("\n", "\\n")
         
-        warning_header = "{}:{}:{}: warning: Style nit at col {}: ".format(
+        warning_header = "{}:{}:{}: warning: Style nit @ col {}: ".format(
             absolute_filename,
             replacement_line_number,
             replacement_column,
@@ -57,7 +57,9 @@ def run_clang_format_on_file(absolute_filename):
         
         warning_message = build_warning_message(replacement_text, replacement_length, replacement_offset, file_string)
         
-        print(warning_header + warning_message)
+        warning_message_details = build_warning_message_details(replacement_text, replacement_length, replacement_offset, file_string)
+        
+        print(warning_header + warning_message + warning_message_details)
 
 
 def line_number_from_offset(file_string, offset):
@@ -89,6 +91,17 @@ def build_warning_message(replacement_text, replacement_length, replacement_offs
         else:
             return "replace next {} chars with \"{}\"".format(replacement_length, replacement_text)
 
+def build_warning_message_details(replacement_text, replacement_length, replacement_offset, file_string):
+    surrounding_character_count = 15
+    surrounding_text_start = max(0, replacement_offset - surrounding_character_count)
+    surrounding_text_end = min(len(file_string), replacement_offset + surrounding_character_count)
+    
+    surrounding_text_with_replacement = \
+        file_string[surrounding_text_start:replacement_offset-1] + \
+        replacement_text + \
+        file_string[replacement_offset-1+replacement_length:surrounding_text_end+replacement_length]
+    
+    return "  ➡️  " + surrounding_text_with_replacement
 
 def get_git_modified_files():
     result = []

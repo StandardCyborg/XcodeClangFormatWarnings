@@ -13,3 +13,8 @@ python3 /path/to/run-clang-format.py
 - Build your project!
 
 
+## Helpful Links
+- https://clang.llvm.org/docs/ClangFormat.html
+- https://zed0.co.uk/clang-format-configurator
+- https://github.com/travisjeffery/ClangFormat-Xcode
+
