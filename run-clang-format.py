@@ -98,6 +98,8 @@ def build_warning_message(replacement_text, replacement_length, replacement_offs
             return "replace char with \"{}\"".format(replacement_text)
         elif replacement_length == 2 and replacement_text == ' ': # Not necessarily accurate, but most likely
             return "remove a space"
+        elif file_string[replacement_offset-1] == "\n":
+            return "remove a newline"
         elif replacement_text.find("#include") != -1 and replacement_length > len("#include "):
             return "alphabetize headers"
         else:
@@ -113,7 +115,7 @@ def build_warning_message_details(replacement_text, replacement_length, replacem
         replacement_text + \
         file_string[replacement_offset-1+replacement_length:surrounding_text_end+replacement_length]
     
-    return "  ➡️  …" + surrounding_text_with_replacement + "…"
+    return "  ➡️  …" + surrounding_text_with_replacement
 
 def get_git_modified_files():
     result = []
