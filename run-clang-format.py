@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import shutil
 import subprocess
 import sys
 import xml.etree.ElementTree as ElementTree
@@ -8,6 +9,10 @@ import xml.etree.ElementTree as ElementTree
 SUPPORTED_FILE_EXTENSIONS = [".h", ".hpp", ".c", ".cpp", ".m", ".mm"]
 
 def run_clang_format(directory):
+    if not shutil.which("clang-format"):
+        print("Error: clang-format is not installed. Please install clang-format, such as by using HomeBrew:\nbrew install clang-format")
+        exit(-1)
+    
     if not os.path.exists(os.path.join(directory, ".clang-format")):
         print("Error: No .clang-format file found. Please generate one, such as by using the following command:\nclang-format -style=llvm -dump-config > .clang-format\n")
         exit(-1)
