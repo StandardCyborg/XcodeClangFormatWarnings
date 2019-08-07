@@ -95,10 +95,10 @@ def build_warning_message(replacement_text, replacement_length, replacement_offs
         if replacement_length == 0:
             return "add space" if replacement_text == ' ' else "add \"{}\"".format(replacement_text)
         elif replacement_length == 1:
-            return "replace char with \"{}\"".format(replacement_text)
+            return "replace {} with \"{}\"".format("newline" if file_string[replacement_offset-1] is '\n' else  "char", replacement_text)
         elif replacement_length == 2 and replacement_text == ' ': # Not necessarily accurate, but most likely
             return "remove a space"
-        elif file_string[replacement_offset-1] == "\n":
+        elif file_string[replacement_offset-1] == "\n" and replacement_length is 1:
             return "remove a newline"
         elif replacement_text.find("#include") != -1 and replacement_length > len("#include "):
             return "alphabetize headers"
