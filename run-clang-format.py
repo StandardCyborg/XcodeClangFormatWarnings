@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from pathlib import Path
 import shutil
 import subprocess
 import sys
@@ -8,23 +9,38 @@ import xml.etree.ElementTree as ElementTree
 
 SUPPORTED_FILE_EXTENSIONS = [".h", ".hpp", ".c", ".cpp", ".m", ".mm"]
 
-def run_clang_format(directory):
+def find_clang_format_file(directory):
+    if os.path.exists(os.path.join(directory, ".clang-format")):
+        return directory
+    
+    if Path(directory).parent == Path(directory):
+        return None
+    
+    # Keep searching up a level
+    return find_clang_format_file(Path(directory).parent)
+
+
+def run_clang_format(directory, should_apply_fixes):
     if not shutil.which("clang-format"):
         print("Error: clang-format is not installed. Please install clang-format, such as by using HomeBrew:\nbrew install clang-format")
         exit(-1)
     
-    if not os.path.exists(os.path.join(directory, ".clang-format")):
+    if not find_clang_format_file(directory):
         print("Error: No .clang-format file found. Please generate one, such as by using the following command:\nclang-format -style=llvm -dump-config > .clang-format\n")
         exit(-1)
     
-    
     modified_files = get_git_modified_files()
-    
+    if should_apply_fixes:
+        modified_files = [filename for filename in modified_files if os.path.basename(directory) in filename]
+        
     for file in modified_files:
         absolute_path = os.path.join(os.getcwd(), file)
         _, extension = os.path.splitext(file)
         if extension in SUPPORTED_FILE_EXTENSIONS:
-            run_clang_format_on_file(absolute_path)
+            if should_apply_fixes:
+                apply_clang_format_fixes_on_file(absolute_path)
+            else:
+                run_clang_format_on_file(absolute_path)
     
     # Recursively walk the directory and run for all supported files
     # for root, subdirectories, files in os.walk(directory):
@@ -32,6 +48,19 @@ def run_clang_format(directory):
     #         name, extension = os.path.splitext(filename)
     #         if extension in SUPPORTED_FILE_EXTENSIONS:
     #             run_clang_format_on_file(os.path.join(root, filename))
+
+def apply_clang_format_fixes_on_file(absolute_filename):
+    args = ["clang-format", "-style=file", absolute_filename]
+    process_result = subprocess.run(args, stdout=subprocess.PIPE)
+    
+    if process_result.stderr:
+        print("Error applying fixes to {}: {}".format(absolute_filename, process_result.stderr))
+    else:
+        print("Applying fixes to {}".format(absolute_filename))
+        stdout_as_string = process_result.stdout.decode("utf-8")
+        
+        with open(absolute_filename, 'w') as file:
+            file.write(stdout_as_string)
 
 
 def run_clang_format_on_file(absolute_filename):
@@ -95,10 +124,10 @@ def build_warning_message(replacement_text, replacement_length, replacement_offs
         if replacement_length == 0:
             return "add space" if replacement_text == ' ' else "add \"{}\"".format(replacement_text)
         elif replacement_length == 1:
-            return "replace {} with \"{}\"".format("newline" if file_string[replacement_offset-1] is '\n' else  "char", replacement_text)
+            return "replace {} with \"{}\"".format("newline" if file_string[replacement_offset-1] == '\n' else  "char", replacement_text)
         elif replacement_length == 2 and replacement_text == ' ': # Not necessarily accurate, but most likely
             return "remove a space"
-        elif file_string[replacement_offset-1] == "\n" and replacement_length is 1:
+        elif file_string[replacement_offset-1] == "\n" and replacement_length == 1:
             return "remove a newline"
         elif replacement_text.find("#include") != -1 and replacement_length > len("#include "):
             return "alphabetize headers"
@@ -130,12 +159,19 @@ def get_git_modified_files():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        path = sys.argv[1]
+    should_apply_fixes = False
+    path_argument_index = 1
+    
+    if "--apply-fixes" in sys.argv:
+        should_apply_fixes = True
+        path_argument_index += 1
+    
+    if len(sys.argv) > path_argument_index:
+        path = sys.argv[path_argument_index]
         # Turn into an absolute path if needed
         if not path.startswith("/"):
             path = os.path.join(os.getcwd(), path)
     else:
         path = os.getcwd()
     
-    run_clang_format(path)
+    run_clang_format(path, should_apply_fixes)
