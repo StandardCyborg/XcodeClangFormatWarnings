@@ -29,11 +29,10 @@ def run_clang_format(directory, should_apply_fixes):
         print("Error: No .clang-format file found. Please generate one, such as by using the following command:\nclang-format -style=llvm -dump-config > .clang-format\n")
         exit(-1)
     
-    modified_files = get_git_modified_files()
-    if should_apply_fixes:
-        modified_files = [filename for filename in modified_files if os.path.basename(directory) in filename]
+    git_modified_files = get_git_modified_files()
+    modified_files_in_directory = [filename for filename in git_modified_files if os.path.basename(directory) in filename]
         
-    for file in modified_files:
+    for file in modified_files_in_directory:
         absolute_path = os.path.join(os.getcwd(), file)
         _, extension = os.path.splitext(file)
         if extension in SUPPORTED_FILE_EXTENSIONS:
