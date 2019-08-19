@@ -151,7 +151,7 @@ def get_git_modified_files():
     status_text = subprocess.check_output("git status --short", encoding="UTF-8", shell=True)
     
     for line in status_text.splitlines():
-        if line.startswith("A") or line.startswith(" M ") or line.startswith("??"):
+        if line.startswith("A  ") or line.startswith("AM ") or line.startswith("M  ") or line.startswith(" M ") or line.startswith("MM ") or line.startswith("?? "):
             result.append(line[3:])
     
     return result        
